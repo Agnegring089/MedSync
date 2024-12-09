@@ -1,0 +1,54 @@
+{% extends "base_pharmaceutical.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Prescrições de {{ patient.name }}</h2>
+    <p class="text-center">CPF: {{ patient.cpf }}</p>
+    <hr>
+
+    {% if prescriptions_with_medications %}
+        <div class="accordion" id="prescriptionsAccordion">
+            {% for item in prescriptions_with_medications %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false"
+                            aria-controls="collapse{{ forloop.counter }}">
+                            Prescrição em {{ item.prescription.date }} - Dr(a). {{ item.prescription.doctor_name }}
+                        </button>
+                    </h2>
+                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse"
+                        aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#prescriptionsAccordion">
+                        <div class="accordion-body">
+                            <p><strong>Local da Consulta:</strong> {{ item.prescription.local_consultation }}</p>
+                            <p><strong>CRM do Médico:</strong> {{ item.prescription.crm }}</p>
+                            <p><strong>Data:</strong> {{ item.prescription.date }}</p>
+
+                            <h6>Medicações:</h6>
+                            <ul>
+                                {% for medication in item.medications %}
+                                    <li>
+                                        <strong>{{ medication.name }}</strong> -
+                                        {{ medication.dose }} -
+                                        {{ medication.frequency }} -
+                                        {{ medication.duration_days }} dias -
+                                        {{ medication.quantity }} {{ medication.medication_type }}
+                                    </li>
+                                {% empty %}
+                                    <li>Nenhuma medicação cadastrada nesta prescrição.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center text-muted">Nenhuma prescrição encontrada para este paciente.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{% url 'home_pharmaceutical' %}" class="btn btn-secondary">Voltar</a>
+    </div>
+</div>
+{% endblock %}

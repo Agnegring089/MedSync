@@ -1,0 +1,140 @@
+{% extends 'base_pharmaceutical.html' %}
+
+{% block title %}Prescrição para {{ patient.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Prescrever para {{ patient.name }}</h2>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="local_consultation" class="form-label">Local da Consulta</label>
+            <input type="text" class="form-control" id="local_consultation" name="local_consultation" required>
+        </div>
+        <div class="mb-3">
+            <label for="crm" class="form-label">CRM do Médico</label>
+            <input type="text" class="form-control" id="crm" name="crm" required>
+        </div>
+        <div class="mb-3">
+            <label for="doctor_name" class="form-label">Nome do Médico</label>
+            <input type="text" class="form-control" id="doctor_name" name="doctor_name" required>
+        </div>
+
+        <h3 class="mt-4">Medicação</h3>
+        <div id="medications-container">
+            <!-- Aqui serão adicionados os cards de medicação -->
+        </div>
+
+        <button type="button" class="btn btn-outline-primary mb-3" id="add-medication">
+            + Adicionar Medicação
+        </button>
+
+        <!-- Botões Fixados no Canto Inferior Direito -->
+        <div class="fixed-buttons">
+            <button type="submit" class="btn btn-success">Salvar Prescrição</button>
+            <a href="{% url 'home_pharmaceutical' %}" class="btn btn-danger">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const medicationsContainer = document.getElementById('medications-container');
+        const addMedicationButton = document.getElementById('add-medication');
+        const form = document.querySelector('form');
+
+        // Adicionar novo medicamento
+        addMedicationButton.addEventListener('click', () => {
+            const medicationCard = document.createElement('div');
+            medicationCard.className = 'card mb-3';
+            medicationCard.innerHTML = `
+                <div class="card-body">
+                    <button type="button" class="btn-close float-end remove-medication"></button>
+                    <div class="mb-3">
+                        <label for="medication_name" class="form-label">Nome do Medicamento</label>
+                        <input type="text" class="form-control medication-field" data-key="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dose" class="form-label">Dose</label>
+                        <input type="text" class="form-control medication-field" data-key="dose" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="frequency" class="form-label">Frequência</label>
+                        <input type="text" class="form-control medication-field" data-key="frequency" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="duration_days" class="form-label">Duração (dias)</label>
+                        <input type="number" class="form-control medication-field" data-key="duration_days" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantidade</label>
+                        <input type="number" class="form-control medication-field" data-key="quantity" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="medication_type" class="form-label">Tipo de Medicação</label>
+                        <select class="form-select medication-field" data-key="medication_type" required>
+                            <option value="capsule">Cápsula/Comprimido</option>
+                            <option value="liquid">Líquido</option>
+                            <option value="injectable">Injetável</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            medicationsContainer.appendChild(medicationCard);
+
+            // Remover medicamento
+            medicationCard.querySelector('.remove-medication').addEventListener('click', () => {
+                medicationsContainer.removeChild(medicationCard);
+            });
+        });
+
+        // Consolidar os medicamentos antes do envio
+        form.addEventListener('submit', (event) => {
+            const medications = [];
+            medicationsContainer.querySelectorAll('.card').forEach((card) => {
+                const medication = {};
+                card.querySelectorAll('.medication-field').forEach((input) => {
+                    const key = input.dataset.key;
+                    const value = input.value;
+                    medication[key] = value;
+                });
+                medications.push(medication);
+            });
+
+            // Criar campo oculto para enviar o JSON
+            const medicationsInput = document.createElement('input');
+            medicationsInput.type = 'hidden';
+            medicationsInput.name = 'medications';
+            medicationsInput.value = JSON.stringify(medications);
+            form.appendChild(medicationsInput);
+        });
+    });
+</script>
+
+
+<style>
+    .fixed-buttons {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-danger {
+        background-color: red;
+        border-color: red;
+    }
+
+    .btn-danger:hover {
+        background-color: darkred;
+        border-color: darkred;
+    }
+</style>
+{% endblock %}
