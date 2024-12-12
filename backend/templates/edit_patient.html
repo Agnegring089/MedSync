@@ -1,0 +1,47 @@
+{% extends 'base_pharmaceutical.html' %}
+
+{% block title %}Editar Paciente{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-warning text-dark text-center">
+                    <h3 class="mb-0"><i class="bi bi-pencil-square"></i> Editar Paciente</h3>
+                </div>
+                <div class="card-body p-5">
+                    <!-- Formulário de edição -->
+                    <form method="post" class="row g-4">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        
+                        <!-- Botão de salvar alterações -->
+                        <div class="col-12 text-center mt-3">
+                            <button type="submit" class="btn btn-primary btn-lg px-4 shadow">
+                                <i class="bi bi-save"></i> Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Seção de exclusão -->
+            <div class="card shadow-lg border-danger mt-4">
+                <div class="card-header bg-danger text-white text-center">
+                    <h4><i class="bi bi-trash-fill"></i> Excluir Paciente</h4>
+                </div>
+                <div class="card-body text-center">
+                    <p>Deseja excluir este paciente? Esta ação não pode ser desfeita.</p>
+                    <form method="post" action="{% url 'delete_patient' patient.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-lg shadow">
+                            <i class="bi bi-x-circle-fill"></i> Excluir Paciente
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

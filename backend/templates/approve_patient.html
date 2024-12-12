@@ -1,0 +1,13 @@
+{% extends 'base_pharmaceutical.html' %}
+
+{% block title %}Aprovar Paciente{% endblock %}
+
+{% block content %}
+    <h1>Aprovar Paciente</h1>
+    <p>Deseja aprovar o paciente {{ patient.name }}?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Aprovar</button>
+        <a href="{% url 'home_pharmaceutical' %}">Cancelar</a>
+    </form>
+{% endblock %}

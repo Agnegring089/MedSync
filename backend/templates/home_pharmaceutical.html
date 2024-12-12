@@ -1,0 +1,180 @@
+{% extends 'base_pharmaceutical.html' %}
+
+{% block title %}Página Inicial do Farmacêutico{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center my-4">Bem-vindo, {{ request.user.pharmaceutical.name }}!</h1>
+
+    <!-- Barra de Pesquisa -->
+    <form method="get" action="" class="d-flex mb-4">
+        <input 
+            type="text" 
+            name="search" 
+            placeholder="Pesquisar por nome ou CPF" 
+            value="{{ search_query }}" 
+            class="form-control me-2"
+            style="max-width: 400px;"
+        >
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-search"></i> Pesquisar
+        </button>
+    </form>
+
+    <!-- Lista de Pacientes -->
+    <div>
+        {% if patients %}
+        <ul class="list-group mb-4">
+            {% for patient in patients %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                    {{ patient.name }} - CPF: {{ patient.cpf }}
+                </span>
+                <a href="#" class="btn btn-outline-info btn-sm patient-link" 
+                   data-id="{{ patient.id }}" 
+                   data-name="{{ patient.name }}" 
+                   data-cpf="{{ patient.cpf }}" 
+                   data-birth="{{ patient.birth_date }}">
+                    Ver Detalhes
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">Nenhum paciente encontrado.</p>
+        {% endif %}
+    </div>
+
+    <!-- Modal de Informações do Paciente -->
+    <div id="patientModal" class="modal fade" tabindex="-1" aria-labelledby="patientModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="modalPatientName" class="modal-title"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="modalPatientCPF"></p>
+                    <p id="modalPatientBirth"></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="addButton" class="btn btn-primary">
+                        📂 Add
+                    </button>
+                    <button id="viewButton" class="btn btn-secondary">
+                        📂 More
+                    </button>
+                    <button id="editButton" class="btn btn-warning">
+                        ✏️ Editar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quadro de Pacientes Pendentes -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Pacientes Pendentes</h5>
+            {% if pending_patients %}
+            <ul class="list-group">
+                {% for patient in pending_patients %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ patient.name }} - CPF: {{ patient.cpf }}
+                    <div class="btn-group" role="group">
+                        <form method="post" action="{% url 'approve_patient' patient.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-success btn-sm rounded-pill">
+                                <i class="bi bi-check-circle"></i> Aprovar
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'deny_patient' patient.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-danger btn-sm rounded-pill ms-2">
+                                <i class="bi bi-x-circle"></i> Negar
+                            </button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">Não há pacientes pendentes de aprovação.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quadro de Últimos Pacientes Aprovados -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Últimos Pacientes Aprovados</h5>
+            {% if recent_patients %}
+            <ul class="list-group">
+                {% for patient in recent_patients %}
+                <li class="list-group-item">
+                    {{ patient.name }} - CPF: {{ patient.cpf }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">Não há pacientes cadastrados recentemente.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("JavaScript carregado e DOM pronto!");
+
+        // Inicializar o modal do Bootstrap
+        const modal = new bootstrap.Modal(document.getElementById('patientModal'));
+        const links = document.querySelectorAll('.patient-link');
+
+        // Selecionar elementos do modal
+        const modalName = document.getElementById('modalPatientName');
+        const modalCPF = document.getElementById('modalPatientCPF');
+        const modalBirth = document.getElementById('modalPatientBirth');
+        const addButton = document.getElementById('addButton');
+        const viewButton = document.getElementById('viewButton');
+        const editButton = document.getElementById('editButton');
+
+        links.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log("Link de paciente clicado!");
+
+                // Obter dados do paciente a partir dos atributos data-*
+                const id = link.getAttribute('data-id');
+                const name = link.getAttribute('data-name');
+                const cpf = link.getAttribute('data-cpf');
+                const birth = link.getAttribute('data-birth');
+
+                console.log(`Dados do paciente: ID=${id}, Nome=${name}, CPF=${cpf}, Nascimento=${birth}`);
+
+                // Preencher os dados no modal
+                modalName.textContent = `Nome: ${name}`;
+                modalCPF.textContent = `CPF: ${cpf}`;
+                modalBirth.textContent = `Data de Nascimento: ${birth}`;
+
+                // Configurar ações dos botões
+                addButton.onclick = () => {
+                    console.log(`Redirecionando para adicionar ficha ao paciente: ${id}`);
+                    window.location.href = `/create_prescription/${id}/`;
+                };
+                viewButton.onclick = () => {
+                    console.log(`Redirecionando para ver fichas do paciente: ${id}`);
+                    window.location.href = `/view_prescriptions/${id}/`;
+                };
+                editButton.onclick = () => {
+                    console.log(`Redirecionando para editar paciente: ${id}`);
+                    window.location.href = `/edit_patient/${id}/`;
+                };
+                // Exibir o modal
+                modal.show();
+            });
+        });
+    });
+</script>
+{% endblock %}

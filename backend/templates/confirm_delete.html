@@ -1,0 +1,15 @@
+{% extends 'base_pharmaceutical.html' %}
+
+{% block title %}Confirmar Exclusão{% endblock %}
+
+{% block content %}
+<div class="container mt-4 text-center">
+    <h1>Confirmar Exclusão</h1>
+    <p>Tem certeza de que deseja excluir o paciente <strong>{{ patient.name }}</strong> (CPF: {{ patient.cpf }})?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sim, Excluir</button>
+        <a href="{% url 'edit_patient' patient.id %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}
