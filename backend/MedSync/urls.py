@@ -12,4 +12,5 @@ urlpatterns = [
     path('create_prescription/<int:patient_id>/', create_prescription, name='create_prescription'),
     path('view_prescriptions/<int:patient_id>/', view_prescriptions, name='view_prescriptions'),
     path('medicaments/', include('medicaments.urls')),
+    path('analyzer/', include('analyzer.urls')),
 ]

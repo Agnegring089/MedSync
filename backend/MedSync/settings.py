@@ -12,6 +12,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+#Open Ai Key
+OPENAI_API_KEY=""
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -28,7 +31,8 @@ INSTALLED_APPS = [
     'pharmacists',
     'patients',
     'prescriptions',
-    'medicaments'
+    'medicaments',
+    'analyzer'
 ]
 
 LOGIN_URL = '/login/'

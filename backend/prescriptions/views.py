@@ -3,10 +3,13 @@ from django.contrib.auth.decorators import login_required
 from pharmacists.permissions import pharmacist_required
 from prescriptions.models import Prescription
 from patients.models import Patient
-from medicaments.models import Medicament  # <- integração
+from medicaments.models import Medicament
+from analyzer.models import Analysis  # <- Importação do app analyzer
 from django.utils.dateparse import parse_date
 from django.contrib import messages
 import json
+import requests
+from itertools import combinations
 
 
 @login_required
@@ -26,15 +29,13 @@ def create_prescription(request, patient_id):
             medications_json = request.POST.get('medications')
             medications = json.loads(medications_json) if medications_json else []
 
-            # Validação: impedir prescrição de medicamentos fora da base
-            valid_names = set(Medicament.objects.values_list('nome', flat=True))
+            valid_names = set(m.nome for m in Medicament.objects.all())
             invalids = [m['name'] for m in medications if m['name'] not in valid_names]
-
             if invalids:
                 raise ValueError(f"Os seguintes medicamentos não estão cadastrados: {', '.join(invalids)}")
 
-            # Criar nova prescrição
-            Prescription.objects.create(
+            # Criar a prescrição primeiro (sem analyze)
+            prescription = Prescription.objects.create(
                 patient=patient,
                 local_consultation=local_consultation,
                 crm=crm,
@@ -42,6 +43,36 @@ def create_prescription(request, patient_id):
                 date=date,
                 medications=medications
             )
+
+            # Analisar pares de medicamentos com IA
+            pairs = list(combinations(medications, 2))
+            analyze_result = []
+
+            for pair in pairs:
+                try:
+                    response = requests.post(
+                        'http://127.0.0.1:8000/analyzer/analyze_prescription/',
+                        json={"medications": list(pair)}
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        analyze_result.append(
+                            f"🧪 {pair[0]['name']} + {pair[1]['name']}: {data.get('recommendations', 'Sem recomendação.')}"
+                        )
+                        # Salvar análise individual no banco
+                        Analysis.objects.create(
+                            prescription_id=prescription.id,
+                            content=data.get('recommendations', ''),
+                            tipo_risco=data.get('tipo_risco', '')
+                        )
+                    else:
+                        analyze_result.append(f"{pair[0]['name']} + {pair[1]['name']}: Falha na análise.")
+                except Exception as e:
+                    analyze_result.append(f"{pair[0]['name']} + {pair[1]['name']}: Erro - {str(e)}")
+
+            # Atualizar o campo analyze do modelo Prescription com texto resumido
+            prescription.analyze = "\n".join(analyze_result)
+            prescription.save()
 
             return redirect('home_pharmaceutical')
 
@@ -64,13 +95,14 @@ def view_prescriptions(request, patient_id):
     patient = get_object_or_404(Patient, id=patient_id)
     prescriptions = Prescription.objects.filter(patient=patient).order_by('-date')
 
-    prescriptions_with_medications = [
-        {
+    prescriptions_with_medications = []
+    for prescription in prescriptions:
+        analysis = Analysis.objects.filter(prescription_id=prescription.id).first()
+        prescriptions_with_medications.append({
             'prescription': prescription,
-            'medications': prescription.medications
-        }
-        for prescription in prescriptions
-    ]
+            'medications': prescription.medications,
+            'analysis': analysis  # usado no template
+        })
 
     return render(request, 'view_prescriptions.html', {
         'patient': patient,

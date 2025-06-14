@@ -54,7 +54,8 @@
             {% for medicament in medicaments %}
                 {
                     name: "{{ medicament.nome|escapejs }}",
-                    display: "{{ medicament.nome|escapejs }}"
+                    display: "{{ medicament.nome|escapejs }}",
+                    estoque: {{ medicament.estoque }}
                 },
             {% endfor %}
         ];
@@ -62,14 +63,17 @@
         addMedicationButton.addEventListener('click', () => {
             const card = document.createElement('div');
             card.className = 'card mb-3';
+            const selectOptions = medicaments.map(m => `<option value="${m.name}">${m.display}</option>`).join('');
+
             card.innerHTML = `
                 <div class="card-body">
                     <button type="button" class="btn-close float-end remove-medication"></button>
                     <div class="mb-3">
                         <label class="form-label">Medicamento</label>
                         <select class="form-select medication-field" data-key="name" required>
-                            ${medicaments.map(m => `<option value="${m.name}">${m.display}</option>`).join('')}
+                            ${selectOptions}
                         </select>
+                        <div class="form-text estoque-info mt-1 text-muted">Estoque disponível: <span class="estoque-value">-</span></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Dose</label>
@@ -90,9 +94,24 @@
                 </div>
             `;
             medicationsContainer.appendChild(card);
+
+            // Evento de exclusão
             card.querySelector('.remove-medication').addEventListener('click', () => {
                 card.remove();
             });
+
+            // Atualizar estoque visível
+            const select = card.querySelector('select[data-key="name"]');
+            const estoqueSpan = card.querySelector('.estoque-value');
+
+            function updateEstoque() {
+                const selectedName = select.value;
+                const match = medicaments.find(m => m.name === selectedName);
+                estoqueSpan.textContent = match ? match.estoque : '-';
+            }
+
+            select.addEventListener('change', updateEstoque);
+            updateEstoque();
         });
 
         form.addEventListener('submit', () => {

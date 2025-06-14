@@ -8,6 +8,8 @@ class Prescription(models.Model):
     doctor_name = models.CharField(max_length=100)
     date = models.DateField(auto_now_add=True)
     medications = models.JSONField(default=list)
+    analyze = models.TextField(blank=True, null=True)
+
 
     def __str__(self):
         return f"Prescrição para {self.patient.name} em {self.date}"
