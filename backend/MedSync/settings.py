@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'pharmacists',
     'patients',
     'prescriptions',
+    'medicaments'
 ]
 
 LOGIN_URL = '/login/'
@@ -84,9 +85,9 @@ WSGI_APPLICATION = 'MedSync.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'medsync_db',
         'USER': 'postgres',
-        'PASSWORD': '1234',
+        'PASSWORD': 'senha',
         'HOST': 'localhost',
         'PORT': '5432',
     }

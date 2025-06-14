@@ -1,0 +1,129 @@
+{% extends 'base_pharmaceutical.html' %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h2 class="mb-4 text-center">Gestão de Medicamentos</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Card de cadastro -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-primary text-white">
+            Cadastrar Novo Medicamento
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <input type="text" name="nome_convencional" class="form-control" placeholder="Nome Convencional" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="dose" class="form-control" placeholder="Dose (ex: 500mg)" required>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="tipo" class="form-select" required>
+                            <option value="">Tipo</option>
+                            <option value="comprimido">Comprimido</option>
+                            <option value="capsula">Cápsula</option>
+                            <option value="injetavel">Injetável</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" name="estoque" class="form-control" placeholder="Estoque" min="0" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success mt-3" style="background-color: #28d17d; border-color: #28d17d;">
+                    <i class="bi bi-check-circle me-1"></i> Cadastrar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de medicamentos -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            Medicamentos Cadastrados
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Dose</th>
+                        <th>Tipo</th>
+                        <th>Estoque</th>
+                        <th class="text-center" style="width: 120px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for medicament in medicaments %}
+                    <tr>
+                        <td>{{ medicament.nome_convencional }}</td>
+                        <td>{{ medicament.dose }}</td>
+                        <td>{{ medicament.get_tipo_display }}</td>
+                        <td>{{ medicament.estoque }}</td>
+                        <td class="text-center">
+                            <!-- Editar -->
+                            <a data-bs-toggle="collapse" href="#editForm{{ medicament.id }}" role="button" class="btn btn-sm btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <!-- Excluir -->
+                            <form method="post" action="{% url 'delete_medicament' medicament.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Tem certeza que deseja excluir este medicamento?');" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <!-- Linha de edição colapsável -->
+                    <tr class="collapse" id="editForm{{ medicament.id }}">
+                        <td colspan="5">
+                            <form method="post" action="{% url 'edit_medicament' medicament.id %}">
+                                {% csrf_token %}
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <input type="text" name="nome_convencional" class="form-control" value="{{ medicament.nome_convencional }}" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" name="dose" class="form-control" value="{{ medicament.dose }}" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select name="tipo" class="form-select" required>
+                                            <option value="comprimido" {% if medicament.tipo == 'comprimido' %}selected{% endif %}>Comprimido</option>
+                                            <option value="capsula" {% if medicament.tipo == 'capsula' %}selected{% endif %}>Cápsula</option>
+                                            <option value="injetavel" {% if medicament.tipo == 'injetavel' %}selected{% endif %}>Injetável</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" name="estoque" class="form-control" value="{{ medicament.estoque }}" min="0" required>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="bi bi-save"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center">Nenhum medicamento cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
